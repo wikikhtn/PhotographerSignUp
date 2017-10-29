@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="email">Email</string>
+    <string name="birthday">Birthday</string>
+    <string name="text_ssn">SSN (Last 4 digits)</string>
+    <string name="password">Password</string>
+    <string name="confirm_pass">Confirm Password</string>
+    <string name="background_check">Will you pass Background Check</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+</resources>
