@@ -8,21 +8,24 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +42,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class SignUpActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+    private ViewGroup mLayoutProfile;
     private CircleImageView mImgViewProfile;
     private EditText mEdtFirstName;
     private EditText mEdtLastName;
@@ -53,9 +57,9 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     private Button mBtnAccept;
     private Calendar mCalendar;
     private String mCheckBackground;
-    private File mProfileImage;;
-    private int REQUEST_CAMERA = 0;
-    private int SELECT_FILE = 1;
+    private File mProfileImage;
+    private static final int REQUEST_CAMERA = 0;
+    private static final int SELECT_FILE = 1;
     private static final int RC_CAMERA_PERM = 123;
     private static final int RC_READ_EXTERNAL_PERM = 456;
 
@@ -66,9 +70,9 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
         setActionBar();
         initView();
+        setAutoSizeImageProfile();
         setListener();
         loadData();
-
     }
 
     public void setActionBar() {
@@ -98,6 +102,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     }
 
     public void initView() {
+        mLayoutProfile = (ViewGroup) findViewById(R.id.layout_img_profile);
         mImgViewProfile = (CircleImageView) findViewById(R.id.image_profile);
         mEdtFirstName = (EditText) findViewById(R.id.edtFirstName);
         mEdtLastName = (EditText) findViewById(R.id.edtLastName);
@@ -111,6 +116,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         mChkNo = (CheckBox) findViewById(R.id.chkNo);
         mBtnAccept = (Button) findViewById(R.id.btnAccept);
         mCalendar = Calendar.getInstance();
+        mCheckBackground = "";
     }
 
     public void loadData() {
@@ -166,13 +172,15 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         mBtnAccept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean isEmpty = checkEmptyInput(new EditText[]{mEdtFirstName, mEdtLastName, mEdtPhoneNumber, mEdtEmail, mEdtBirthday,
+                boolean isEmptyInput = checkEmptyInput(new EditText[]{mEdtFirstName, mEdtLastName, mEdtPhoneNumber, mEdtEmail, mEdtBirthday,
                         mEdtSSN, mEdtPassword, mEdtConfirmPassword});
                 String password = mEdtPassword.getText().toString().trim();
                 String confirmPassword = mEdtConfirmPassword.getText().toString().trim();
 
-                if (isEmpty || mCheckBackground.isEmpty()) {
+                if (isEmptyInput) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.please_enter_info), Toast.LENGTH_SHORT).show();
+                } else if (mCheckBackground.isEmpty()){
+                    Toast.makeText(SignUpActivity.this, getString(R.string.please_choose_background_check), Toast.LENGTH_SHORT).show();
                 } else if (mEdtSSN.length() < 4) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.ssn_least_4), Toast.LENGTH_SHORT).show();
                 } else if (mEdtPhoneNumber.length() < 10) {
@@ -212,6 +220,19 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         return false;
     }
 
+    public void setAutoSizeImageProfile() {
+        ViewTreeObserver vto = mLayoutProfile.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                int heightView = getWindow().getDecorView().getBottom();
+                int height = heightView * 6 / 52; //Height image profile = 3/4 height container layout = 2/13 parent layout
+                RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(height, height);
+                mImgViewProfile.setLayoutParams(lp);
+            }
+        });
+    }
+
     private boolean hasCameraPermission() {
         return EasyPermissions.hasPermissions(this, Manifest.permission.CAMERA);
     }
@@ -221,14 +242,14 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     }
 
     @AfterPermissionGranted(RC_CAMERA_PERM)
-    public void cameraTask(){
+    public void cameraTask() {
         if (hasCameraPermission()) {
             cameraIntent();
         }
     }
 
     @AfterPermissionGranted(RC_READ_EXTERNAL_PERM)
-    public void choosePictureTask(){
+    public void choosePictureTask() {
         if (hasReadExternalPermission()) {
             galleryIntent();
         }
@@ -254,7 +275,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
                                 Manifest.permission.CAMERA);
                     }
                 } else if (items[item].equals("Choose from Library")) {
-                   if (hasReadExternalPermission()) {
+                    if (hasReadExternalPermission()) {
                         galleryIntent();
                     } else {
                         EasyPermissions.requestPermissions(
@@ -329,7 +350,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             }
         }
         mImgViewProfile.setImageBitmap(bm);
-        mProfileImage =  new File(Environment.getExternalStorageDirectory(), selectedImageURI.getPath());
+        mProfileImage = new File(Environment.getExternalStorageDirectory(), selectedImageURI.getPath());
     }
 
     @Override

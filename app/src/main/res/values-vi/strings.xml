@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Photographer</string>
+    <string name="title_text">Photographer - Sign Up</string>
+    <string name="hint_enter">Enter here</string>
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
     <string name="phone_number">Phone Number</string>
@@ -18,4 +20,5 @@
     <string name="confirm_pass_dont_match">The confirm password must match the password!</string>
     <string name="rationale_camera">This app needs access to your camera so you can take a photo!</string>
     <string name="rationale_external_storage">This app needs access to your camera so you can select a photo from your library!</string>
+    <string name="please_choose_background_check">Please choose Yes/No for background check!</string>
 </resources>

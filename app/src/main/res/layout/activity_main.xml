@@ -12,14 +12,21 @@
         android:layout_height="0dp"
         android:layout_weight="2">
 
-        <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/image_profile"
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_centerInParent="true"
-            android:src="@drawable/ic_profile_default"
-            app:civ_border_color="@color/colorAccent"
-            app:civ_border_width="2dp" />
+        <RelativeLayout
+            android:id="@+id/layout_img_profile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true">
+
+            <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/image_profile"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/ic_profile_default"
+                app:civ_border_color="@color/colorAccent"
+                app:civ_border_width="2dp" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 
@@ -47,6 +54,7 @@
             android:layout_weight="1.8"
             android:background="@color/colorTransparency"
             android:hint="@string/hint_enter"
+            android:maxLength="250"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
@@ -83,6 +91,7 @@
             android:layout_weight="1.8"
             android:background="@color/colorTransparency"
             android:hint="@string/hint_enter"
+            android:maxLength="250"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
@@ -120,11 +129,11 @@
             android:background="@color/colorTransparency"
             android:hint="@string/hint_enter"
             android:inputType="phone"
+            android:maxLength="10"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
-            android:textSize="@dimen/text_size_14sp"
-            android:maxLength="10"/>
+            android:textSize="@dimen/text_size_14sp" />
 
     </LinearLayout>
 
@@ -158,6 +167,7 @@
             android:background="@color/colorTransparency"
             android:hint="@string/hint_enter"
             android:inputType="textEmailAddress"
+            android:maxLength="250"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
@@ -197,13 +207,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1.8"
             android:background="@color/colorTransparency"
+            android:focusableInTouchMode="false"
             android:hint="@string/hint_enter"
             android:inputType="datetime"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
-            android:textSize="@dimen/text_size_14sp"
-            android:focusableInTouchMode="false"/>
+            android:textSize="@dimen/text_size_14sp" />
 
     </LinearLayout>
 
@@ -237,11 +247,11 @@
             android:background="@color/colorTransparency"
             android:hint="@string/hint_enter"
             android:inputType="number"
+            android:maxLength="4"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
-            android:textSize="@dimen/text_size_14sp"
-            android:maxLength="4"/>
+            android:textSize="@dimen/text_size_14sp" />
 
     </LinearLayout>
 
@@ -276,6 +286,7 @@
             android:fontFamily="sans-serif"
             android:hint="@string/hint_enter"
             android:inputType="textPassword"
+            android:maxLength="250"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
@@ -314,6 +325,7 @@
             android:fontFamily="sans-serif"
             android:hint="@string/hint_enter"
             android:inputType="textPassword"
+            android:maxLength="250"
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
@@ -376,6 +388,7 @@
             android:id="@+id/btnAccept"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
             android:layout_marginBottom="15dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
