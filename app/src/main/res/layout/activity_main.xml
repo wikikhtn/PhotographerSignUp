@@ -123,7 +123,8 @@
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
-            android:textSize="@dimen/text_size_14sp" />
+            android:textSize="@dimen/text_size_14sp"
+            android:maxLength="10"/>
 
     </LinearLayout>
 
@@ -201,7 +202,8 @@
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
-            android:textSize="@dimen/text_size_14sp" />
+            android:textSize="@dimen/text_size_14sp"
+            android:focusableInTouchMode="false"/>
 
     </LinearLayout>
 
@@ -238,7 +240,8 @@
             android:maxLines="1"
             android:singleLine="true"
             android:textColor="@color/colorGrey2"
-            android:textSize="@dimen/text_size_14sp" />
+            android:textSize="@dimen/text_size_14sp"
+            android:maxLength="4"/>
 
     </LinearLayout>
 
