@@ -1,7 +1,16 @@
 package com.kan_tek.photographersignup;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,11 +26,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Calendar;
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public class SignUpActivity extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
     private CircleImageView mImgViewProfile;
     private EditText mEdtFirstName;
     private EditText mEdtLastName;
@@ -36,6 +53,11 @@ public class SignUpActivity extends AppCompatActivity {
     private Button mBtnAccept;
     private Calendar mCalendar;
     private String mCheckBackground;
+    private File mProfileImage;;
+    private int REQUEST_CAMERA = 0;
+    private int SELECT_FILE = 1;
+    private static final int RC_CAMERA_PERM = 123;
+    private static final int RC_READ_EXTERNAL_PERM = 456;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,8 +121,7 @@ public class SignUpActivity extends AppCompatActivity {
         mImgViewProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Intent chooseImageIntent = ImagePicker.getPickImageIntent(getActivity(),1);
-
+                selectImage();
             }
         });
 
@@ -152,16 +173,16 @@ public class SignUpActivity extends AppCompatActivity {
 
                 if (isEmpty || mCheckBackground.isEmpty()) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.please_enter_info), Toast.LENGTH_SHORT).show();
-                } else if(mEdtSSN.length() < 4) {
+                } else if (mEdtSSN.length() < 4) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.ssn_least_4), Toast.LENGTH_SHORT).show();
                 } else if (mEdtPhoneNumber.length() < 10) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.phone_least_10), Toast.LENGTH_SHORT).show();
-                } else if (checkValidEmail(mEdtEmail.getText().toString().trim())){
-                    Toast.makeText(SignUpActivity.this,getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
-                } else if (confirmPassword.equals(password)){
+                } else if (checkValidEmail(mEdtEmail.getText().toString().trim())) {
+                    Toast.makeText(SignUpActivity.this, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
+                } else if (confirmPassword.equals(password)) {
 
                 } else {
-                    Toast.makeText(SignUpActivity.this,getString(R.string.confirm_pass_dont_match), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SignUpActivity.this, getString(R.string.confirm_pass_dont_match), Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -191,4 +212,139 @@ public class SignUpActivity extends AppCompatActivity {
         return false;
     }
 
+    private boolean hasCameraPermission() {
+        return EasyPermissions.hasPermissions(this, Manifest.permission.CAMERA);
+    }
+
+    private boolean hasReadExternalPermission() {
+        return EasyPermissions.hasPermissions(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+    }
+
+    @AfterPermissionGranted(RC_CAMERA_PERM)
+    public void cameraTask(){
+        if (hasCameraPermission()) {
+            cameraIntent();
+        }
+    }
+
+    @AfterPermissionGranted(RC_READ_EXTERNAL_PERM)
+    public void choosePictureTask(){
+        if (hasReadExternalPermission()) {
+            galleryIntent();
+        }
+    }
+
+    private void selectImage() {
+        final CharSequence[] items = {"Take Photo", "Choose from Library",
+                "Cancel"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(SignUpActivity.this);
+        builder.setTitle("Add profile picture!");
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                if (items[item].equals("Take Photo")) {
+                    if (hasCameraPermission()) {
+                        cameraIntent();
+                    } else {
+                        EasyPermissions.requestPermissions(
+                                SignUpActivity.this,
+                                getString(R.string.rationale_camera),
+                                RC_CAMERA_PERM,
+                                Manifest.permission.CAMERA);
+                    }
+                } else if (items[item].equals("Choose from Library")) {
+                   if (hasReadExternalPermission()) {
+                        galleryIntent();
+                    } else {
+                        EasyPermissions.requestPermissions(
+                                SignUpActivity.this,
+                                getString(R.string.rationale_external_storage),
+                                RC_READ_EXTERNAL_PERM,
+                                Manifest.permission.READ_EXTERNAL_STORAGE);
+                    }
+                } else if (items[item].equals("Cancel")) {
+                    dialog.dismiss();
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void galleryIntent() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);//
+        startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
+    }
+
+    private void cameraIntent() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, REQUEST_CAMERA);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == SELECT_FILE)
+                onSelectFromGalleryResult(data);
+            else if (requestCode == REQUEST_CAMERA)
+                onCaptureImageResult(data);
+        }
+    }
+
+    private void onCaptureImageResult(Intent data) {
+        Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        File destination = new File(Environment.getExternalStorageDirectory(),
+                System.currentTimeMillis() + ".jpg");
+        FileOutputStream fo;
+        try {
+            destination.createNewFile();
+            fo = new FileOutputStream(destination);
+            fo.write(bytes.toByteArray());
+            fo.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mImgViewProfile.setImageBitmap(thumbnail);
+        mProfileImage = destination;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void onSelectFromGalleryResult(Intent data) {
+        Bitmap bm = null;
+        Uri selectedImageURI = null;
+        if (data != null) {
+            try {
+                bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
+                selectedImageURI = data.getData();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        mImgViewProfile.setImageBitmap(bm);
+        mProfileImage =  new File(Environment.getExternalStorageDirectory(), selectedImageURI.getPath());
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
 }
