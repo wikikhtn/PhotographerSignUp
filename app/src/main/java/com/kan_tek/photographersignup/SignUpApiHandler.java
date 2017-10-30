@@ -20,12 +20,12 @@ public class SignUpApiHandler {
     public static final String BASE_URL = "http://52.89.66.217:8181/api/";
 
     public static void signUpAccount(Context context, SignUpRequestModel rqt,
-                                  SmartCallBack<SignUpResponseModel> callback) {
+                                     SmartCallBack<SignUpResponseModel> callback) {
         Retrofit retrofit = buildRetrofit(context);
         SignUpApi signUpApi = retrofit.create(SignUpApi.class);
         Call<SignUpResponseModel> call = signUpApi.signUpAccount(rqt.getFirstName(), rqt.getLastName(),
                 rqt.getPhoneNumber(), rqt.getEmailId(), rqt.getDateOfBirth(), rqt.getSsn(), rqt.getPassword(),
-                rqt.getBackgroundCheck(),rqt.getDeviceToken(), rqt.getDeviceType(), rqt.getProfileImage());
+                rqt.getBackgroundCheck(), rqt.getDeviceToken(), rqt.getDeviceType(), rqt.getProfileImage());
         call.enqueue(callback);
     }
 

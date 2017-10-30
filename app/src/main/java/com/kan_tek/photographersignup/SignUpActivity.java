@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,8 +40,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URI;
-import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.List;
 
@@ -74,6 +74,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     private static final int SELECT_FILE = 1;
     private static final int RC_CAMERA_PERM = 123;
     private static final int RC_READ_EXTERNAL_PERM = 456;
+    private static final String[] CAMERA_AND_READ_EXTERNAL = {Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +83,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
         setActionBar();
         initView();
-        setAutoSizeImageProfile();
+        setAutoSizeProfileImage();
         setListener();
     }
 
@@ -137,7 +138,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         mImgViewProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                selectImage();
+                selectImageProfile();
             }
         });
 
@@ -229,13 +230,13 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         return false;
     }
 
-    public void setAutoSizeImageProfile() {
+    public void setAutoSizeProfileImage() {
         ViewTreeObserver vto = mLayoutProfile.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 int heightView = getWindow().getDecorView().getBottom();
-                int height = heightView * 6 / 52; //Height image profile = 3/4 height container layout = 2/13 parent layout
+                int height = heightView * 6 / 52; //Height image profile = 3/4 of height container layout (= 2/13 of parent layout)
                 RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(height, height);
                 mImgViewProfile.setLayoutParams(lp);
             }
@@ -243,7 +244,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     }
 
     private boolean hasCameraPermission() {
-        return EasyPermissions.hasPermissions(this, Manifest.permission.CAMERA);
+        return EasyPermissions.hasPermissions(this, CAMERA_AND_READ_EXTERNAL);
     }
 
     private boolean hasReadExternalPermission() {
@@ -252,22 +253,16 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
     @AfterPermissionGranted(RC_CAMERA_PERM)
     public void cameraTask() {
-        if (hasCameraPermission()) {
-            cameraIntent();
-        }
+        startCameraIntent();
     }
 
     @AfterPermissionGranted(RC_READ_EXTERNAL_PERM)
-    public void choosePictureTask() {
-        if (hasReadExternalPermission()) {
-            galleryIntent();
-        }
+    public void selectPictureTask() {
+        startGalleryIntent();
     }
 
-    private void selectImage() {
-        final CharSequence[] items = {"Take Photo", "Choose from Library",
-                "Cancel"};
-
+    private void selectImageProfile() {
+        final CharSequence[] items = {"Take Photo", "Choose from Library", "Cancel"};
         AlertDialog.Builder builder = new AlertDialog.Builder(SignUpActivity.this);
         builder.setTitle("Add profile picture!");
         builder.setItems(items, new DialogInterface.OnClickListener() {
@@ -275,17 +270,17 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             public void onClick(DialogInterface dialog, int item) {
                 if (items[item].equals("Take Photo")) {
                     if (hasCameraPermission()) {
-                        cameraIntent();
+                        startCameraIntent();
                     } else {
                         EasyPermissions.requestPermissions(
                                 SignUpActivity.this,
                                 getString(R.string.rationale_camera),
                                 RC_CAMERA_PERM,
-                                Manifest.permission.CAMERA);
+                                CAMERA_AND_READ_EXTERNAL);
                     }
                 } else if (items[item].equals("Choose from Library")) {
                     if (hasReadExternalPermission()) {
-                        galleryIntent();
+                        startGalleryIntent();
                     } else {
                         EasyPermissions.requestPermissions(
                                 SignUpActivity.this,
@@ -301,14 +296,14 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         builder.show();
     }
 
-    private void galleryIntent() {
+    private void startGalleryIntent() {
         Intent intent = new Intent();
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);//
+        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
     }
 
-    private void cameraIntent() {
+    private void startCameraIntent() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, REQUEST_CAMERA);
     }
@@ -316,7 +311,6 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == SELECT_FILE)
                 onSelectFromGalleryResult(data);
@@ -342,14 +336,13 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             e.printStackTrace();
         }
         mImgViewProfile.setImageBitmap(thumbnail);
-//        String pathImg = RealPathUtils.getPath(SignUpActivity.this, data.getData());
-//        File file1 = new File(pathImg);
-//        RequestBody requestFile =
-//                RequestBody.create(
-//                        MediaType.parse(getContentResolver().getType(data.getData())),
-//                        file1
-//                );
-//        mProfileImage = MultipartBody.Part.createFormData("profileImage", file1.getName(), requestFile);
+        Uri uri = getImageContentUri(this, destination);
+        RequestBody requestFile =
+                RequestBody.create(
+                        MediaType.parse(getContentResolver().getType(uri)),
+                        destination
+                );
+        mProfileImage = MultipartBody.Part.createFormData("profileImage", destination.getName(), requestFile);
     }
 
     @SuppressWarnings("deprecation")
@@ -373,6 +366,32 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
     }
 
+    //Save and get uri of profile image
+    public static Uri getImageContentUri(Context context, File imageFile) {
+        String filePath = imageFile.getAbsolutePath();
+        Cursor cursor = context.getContentResolver().query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Images.Media._ID},
+                MediaStore.Images.Media.DATA + "=? ",
+                new String[]{filePath}, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int id = cursor.getInt(cursor
+                    .getColumnIndex(MediaStore.MediaColumns._ID));
+            Uri baseUri = Uri.parse("content://media/external/images/media");
+            return Uri.withAppendedPath(baseUri, "" + id);
+        } else {
+            if (imageFile.exists()) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DATA, filePath);
+                return context.getContentResolver().insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            } else {
+                return null;
+            }
+        }
+    }
+
     @Override
     public void onPermissionsGranted(int requestCode, List<String> perms) {
 
@@ -390,12 +409,8 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     }
 
     public void checkSignUp() {
-        mProgressDialog.setTitle("Photographer - Sign Up");
-        mProgressDialog.setMessage("Please wait...");
-        mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setCancelable(false);
-        mProgressDialog.show();
-        mBtnAccept.setEnabled(false);
+        mBtnAccept.setEnabled(false); //Don't allow click many times when internet slowly
+        showProgressDialog();
         createInputRequest();
         SignUpApiHandler.signUpAccount(this, mRqt, new SmartCallBack<SignUpResponseModel>() {
             @Override
@@ -405,26 +420,26 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
             @Override
             public void onSuccess(SignUpResponseModel response) {
-                mProgressDialog.dismiss();
                 mBtnAccept.setEnabled(true);
                 if (response.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                     Toast.makeText(SignUpActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.d("Link img upload: ", response.getData().getProfilePicURL().getThumb());
+                    Log.d("Link img upload: ", response.getData().getProfilePicURL().getOriginal());
                 }
+                hideProgressDialog();
             }
 
             @Override
             public void onError() {
-                mProgressDialog.dismiss();
                 mBtnAccept.setEnabled(true);
+                hideProgressDialog();
                 //Show error
             }
 
             @Override
             public void onFailure(Call<SignUpResponseModel> call, Throwable t) {
                 super.onFailure(call, t);
-                mProgressDialog.dismiss();
                 mBtnAccept.setEnabled(true);
+                hideProgressDialog();
                 //Show error
             }
         });
@@ -432,57 +447,48 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
     public void createInputRequest() {
         mRqt = new SignUpRequestModel();
-        RequestBody setFirstName =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtFirstName.getText().toString().trim());
+        RequestBody setFirstName = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtFirstName.getText().toString().trim());
         mRqt.setFirstName(setFirstName);
 
-        RequestBody setLastName =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtLastName.getText().toString().trim());
-
+        RequestBody setLastName = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtLastName.getText().toString().trim());
         mRqt.setLastName(setLastName);
 
-        RequestBody setPhoneNumber =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtPhoneNumber.getText().toString().trim());
+        RequestBody setPhoneNumber = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtPhoneNumber.getText().toString().trim());
         mRqt.setPhoneNumber(setPhoneNumber);
 
-        RequestBody setEmailId =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtEmail.getText().toString().trim());
+        RequestBody setEmailId = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtEmail.getText().toString().trim());
         mRqt.setEmailId(setEmailId);
 
-        RequestBody setDateOfBirth =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtBirthday.getText().toString().trim());
+        RequestBody setDateOfBirth = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtBirthday.getText().toString().trim());
         mRqt.setDateOfBirth(setDateOfBirth);
 
-        RequestBody setSsn =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtSSN.getText().toString().trim());
+        RequestBody setSsn = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtSSN.getText().toString().trim());
         mRqt.setSsn(setSsn);
 
-        RequestBody setPassword =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mEdtPassword.getText().toString().trim());
+        RequestBody setPassword = RequestBody.create(okhttp3.MultipartBody.FORM, mEdtPassword.getText().toString().trim());
         mRqt.setPassword(setPassword);
 
-        RequestBody setBackgroundCheck =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, mCheckBackground);
+        RequestBody setBackgroundCheck = RequestBody.create(okhttp3.MultipartBody.FORM, mCheckBackground);
         mRqt.setBackgroundCheck(setBackgroundCheck);
 
-        RequestBody setDeviceToken =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, "1");
+        RequestBody setDeviceToken = RequestBody.create(okhttp3.MultipartBody.FORM, "1");
         mRqt.setDeviceToken(setDeviceToken);
 
-        RequestBody setDeviceType =
-                RequestBody.create(
-                        okhttp3.MultipartBody.FORM, "ANDROID");
+        RequestBody setDeviceType = RequestBody.create(okhttp3.MultipartBody.FORM, "ANDROID");
         mRqt.setDeviceType(setDeviceType);
 
         mRqt.setProfileImage(mProfileImage);
+    }
+
+    public void showProgressDialog() {
+        mProgressDialog.setTitle("Photographer - Sign Up");
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.show();
+    }
+
+    public void hideProgressDialog() {
+        mProgressDialog.dismiss();
     }
 }
