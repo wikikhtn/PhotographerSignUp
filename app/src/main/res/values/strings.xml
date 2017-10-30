@@ -21,4 +21,11 @@
     <string name="rationale_camera">This app needs access to your camera so you can take a photo!</string>
     <string name="rationale_external_storage">This app needs access to your camera so you can select a photo from your library!</string>
     <string name="please_choose_background_check">Please choose Yes/No for background check!</string>
+
+    <string name="error400">Bad Request</string>
+    <string name="error401">Unauthorized</string>
+    <string name="error404">Data Not Found</string>
+    <string name="error415">Unsupported media type</string>
+    <string name="error500">Internal Server Error</string>
+    <string name="no_internet">Please check your internet connection or try again later!</string>
 </resources>

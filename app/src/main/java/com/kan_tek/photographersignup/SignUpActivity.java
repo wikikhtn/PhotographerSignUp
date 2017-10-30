@@ -4,17 +4,21 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcel;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +38,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.Calendar;
 import java.util.List;
 
@@ -42,6 +47,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class SignUpActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+    private ProgressDialog mProgressDialog;
     private ViewGroup mLayoutProfile;
     private CircleImageView mImgViewProfile;
     private EditText mEdtFirstName;
@@ -58,6 +64,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     private Calendar mCalendar;
     private String mCheckBackground;
     private File mProfileImage;
+//    private String mProfileImage;
     private static final int REQUEST_CAMERA = 0;
     private static final int SELECT_FILE = 1;
     private static final int RC_CAMERA_PERM = 123;
@@ -72,7 +79,6 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         initView();
         setAutoSizeImageProfile();
         setListener();
-        loadData();
     }
 
     public void setActionBar() {
@@ -102,6 +108,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     }
 
     public void initView() {
+        mProgressDialog = new ProgressDialog(this);
         mLayoutProfile = (ViewGroup) findViewById(R.id.layout_img_profile);
         mImgViewProfile = (CircleImageView) findViewById(R.id.image_profile);
         mEdtFirstName = (EditText) findViewById(R.id.edtFirstName);
@@ -117,10 +124,6 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         mBtnAccept = (Button) findViewById(R.id.btnAccept);
         mCalendar = Calendar.getInstance();
         mCheckBackground = "";
-    }
-
-    public void loadData() {
-
     }
 
     public void setListener() {
@@ -179,7 +182,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
                 if (isEmptyInput) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.please_enter_info), Toast.LENGTH_SHORT).show();
-                } else if (mCheckBackground.isEmpty()){
+                } else if (mCheckBackground.isEmpty()) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.please_choose_background_check), Toast.LENGTH_SHORT).show();
                 } else if (mEdtSSN.length() < 4) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.ssn_least_4), Toast.LENGTH_SHORT).show();
@@ -188,11 +191,10 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
                 } else if (checkValidEmail(mEdtEmail.getText().toString().trim())) {
                     Toast.makeText(SignUpActivity.this, getString(R.string.invalid_email), Toast.LENGTH_SHORT).show();
                 } else if (confirmPassword.equals(password)) {
-
+                    checkSignUp();
                 } else {
                     Toast.makeText(SignUpActivity.this, getString(R.string.confirm_pass_dont_match), Toast.LENGTH_SHORT).show();
                 }
-
             }
         });
     }
@@ -335,6 +337,8 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         }
         mImgViewProfile.setImageBitmap(thumbnail);
         mProfileImage = destination;
+//        byte[] imageBytes = bytes.toByteArray();
+//        mProfileImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
     }
 
     @SuppressWarnings("deprecation")
@@ -367,5 +371,38 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    public void checkSignUp() {
+        SignUpRequestModel rqt = new SignUpRequestModel();
+        rqt.setFirstName(mEdtFirstName.getText().toString().trim());
+        rqt.setLastName(mEdtLastName.getText().toString().trim());
+        rqt.setPhoneNumber(mEdtPhoneNumber.getText().toString().trim());
+        rqt.setEmailId(mEdtEmail.getText().toString().trim());
+        rqt.setDateOfBirth(mEdtBirthday.getText().toString().trim());
+        rqt.setSsn(mEdtSSN.getText().toString().trim());
+        rqt.setPassword(mEdtPassword.getText().toString().trim());
+        rqt.setBackgroundCheck(mCheckBackground);
+        rqt.setProfileImage(mProfileImage);
+        rqt.setDeviceToken("1");
+        rqt.setDeviceType("ANDROID");
+        SignUpApiHandler.signUpAccount(this, rqt, new SmartCallBack<SignUpResponseModel>() {
+            @Override
+            public Context getCurrentContext() {
+                return SignUpActivity.this;
+            }
+
+            @Override
+            public void onSuccess(SignUpResponseModel response) {
+                if (response.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
+                    Toast.makeText(SignUpActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError() {
+//                Toast.makeText(SignUpActivity.this, "Error", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
