@@ -38,6 +38,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.List;
 
@@ -339,16 +340,17 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        mImgViewProfile.setImageBitmap(thumbnail);
-    }
-//        RequestBody requestFile =
-//                RequestBody.create(
-//                        MediaType.parse(getContentResolver().getType(data.getData())),
-//                        file
-//                );
-//        mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
-        Toast.makeText(this, data.getData().toString(), Toast.LENGTH_LONG).show();
-
+            mImgViewProfile.setImageBitmap(thumbnail);
+        }
+        String pathImg = RealPathUtils.getPath(SignUpActivity.this, data.getData());
+        File file1 = new File(pathImg);
+        RequestBody requestFile =
+                RequestBody.create(
+                        MediaType.parse(getContentResolver().getType(data.getData())),
+                        file1
+                );
+        mProfileImage = MultipartBody.Part.createFormData("profileImage", file1.getName(), requestFile);
+//        Toast.makeText(this, pathImg, Toast.LENGTH_LONG).show();
     }
 
     @SuppressWarnings("deprecation")
@@ -362,7 +364,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             }
         }
         mImgViewProfile.setImageBitmap(bm);
-        File file = new File(data.getData().toString());
+        File file = new File("");
         RequestBody requestFile =
                 RequestBody.create(
                         MediaType.parse(getContentResolver().getType(data.getData())),
@@ -427,8 +429,8 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             }
         });
     }
-    
-    public void createInputRequest(){
+
+    public void createInputRequest() {
         mRqt = new SignUpRequestModel();
         RequestBody setFirstName =
                 RequestBody.create(

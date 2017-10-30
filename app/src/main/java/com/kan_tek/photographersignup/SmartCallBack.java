@@ -70,7 +70,11 @@ public abstract class SmartCallBack<T> implements Callback<T> {
 
     @Override
     public void onFailure(Call<T> call, Throwable t) {
-        if (!isNetworkConnected(getCurrentContext()) || !isInternetAvailable()) {
+        boolean isNetworkConnected = isNetworkConnected(getCurrentContext());
+        boolean isInternetAvailable = isInternetAvailable();
+        if (isNetworkConnected || isInternetAvailable) {
+            Toast.makeText(getCurrentContext(), "Error"+ t.getMessage(), Toast.LENGTH_LONG).show();
+        } else {
             Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.no_internet), Toast.LENGTH_LONG).show();
         }
     }
@@ -79,13 +83,13 @@ public abstract class SmartCallBack<T> implements Callback<T> {
         ConnectivityManager cm = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
 
-        return networkInfo != null;
+        return networkInfo != null; //=true if has internet
     }
 
     public boolean isInternetAvailable() {
         try {
-            InetAddress ipAddr = InetAddress.getByName("google.com.vn");
-            return !ipAddr.equals("");
+            InetAddress ipAdd = InetAddress.getByName("google.com.vn");
+            return ipAdd.equals(""); //=true if has internet
 
         } catch (Exception e) {
             return false;
