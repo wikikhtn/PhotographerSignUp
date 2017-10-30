@@ -30,11 +30,6 @@ public abstract class SmartCallBack<T> implements Callback<T> {
             if (getCurrentContext() != null) {
                 onSuccess(response.body());
             }
-        } else if (response.code() == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-            onError();
-            Log.d("----API Error----", "" + response.code());
-            if (getCurrentContext() != null)
-                Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.error500), Toast.LENGTH_LONG).show();
         } else if (response.code() == HttpURLConnection.HTTP_BAD_REQUEST) {
             onError();
             Log.d("----API Error----", "" + response.code());
@@ -50,20 +45,32 @@ public abstract class SmartCallBack<T> implements Callback<T> {
             Log.d("----API Error----", "" + response.code());
             if (getCurrentContext() != null)
                 Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.error404), Toast.LENGTH_LONG).show();
+        } else if (response.code() == HttpURLConnection.HTTP_CONFLICT) {
+            onError();
+            Log.d("----API Error----", "" + response.code());
+            if (getCurrentContext() != null)
+                Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.error409), Toast.LENGTH_LONG).show();
         } else if (response.code() == HttpURLConnection.HTTP_UNSUPPORTED_TYPE) {
             onError();
             Log.d("----API Error----", "" + response.code());
             if (getCurrentContext() != null)
                 Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.error415), Toast.LENGTH_LONG).show();
+        } else if (response.code() == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+            onError();
+            Log.d("----API Error----", "" + response.code());
+            if (getCurrentContext() != null)
+                Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.error500), Toast.LENGTH_LONG).show();
         } else {
             onError();
             Log.d("----API Error----", "" + response.code());
+            if (getCurrentContext() != null)
+                Toast.makeText(getCurrentContext(), "Error code: " + response.code(), Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     public void onFailure(Call<T> call, Throwable t) {
-        if (!isNetworkConnected(getCurrentContext()) || !isInternetAvailable()){
+        if (!isNetworkConnected(getCurrentContext()) || !isInternetAvailable()) {
             Toast.makeText(getCurrentContext(), getCurrentContext().getString(R.string.no_internet), Toast.LENGTH_LONG).show();
         }
     }

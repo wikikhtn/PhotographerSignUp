@@ -2,6 +2,9 @@ package com.kan_tek.photographersignup;
 
 import java.io.File;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+
 /**
  * Created by WIKI on 29/10/2017.
  */
@@ -22,88 +25,88 @@ public class SignUpRequestModel {
      * deviceToken : 1
      */
 
-    private String firstName;
-    private String lastName;
-    private String emailId;
-    private String ssn;
-    private String password;
-    private String phoneNumber;
-    private String backgroundCheck;
-    private String dateOfBirth;
-    private File profileImage;
+    private RequestBody firstName;
+    private RequestBody lastName;
+    private RequestBody emailId;
+    private RequestBody ssn;
+    private RequestBody password;
+    private RequestBody phoneNumber;
+    private RequestBody backgroundCheck;
+    private RequestBody dateOfBirth;
+    private MultipartBody.Part profileImage;
 //    private String profileImage;
-    private String deviceType;
-    private String deviceToken;
+    private RequestBody deviceType;
+    private RequestBody deviceToken;
 
-    public String getFirstName() {
+    public RequestBody getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
+    public void setFirstName(RequestBody firstName) {
         this.firstName = firstName;
     }
 
-    public String getLastName() {
+    public RequestBody getLastName() {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
+    public void setLastName(RequestBody lastName) {
         this.lastName = lastName;
     }
 
-    public String getEmailId() {
+    public RequestBody getEmailId() {
         return emailId;
     }
 
-    public void setEmailId(String emailId) {
+    public void setEmailId(RequestBody emailId) {
         this.emailId = emailId;
     }
 
-    public String getSsn() {
+    public RequestBody getSsn() {
         return ssn;
     }
 
-    public void setSsn(String ssn) {
+    public void setSsn(RequestBody ssn) {
         this.ssn = ssn;
     }
 
-    public String getPassword() {
+    public RequestBody getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(RequestBody password) {
         this.password = password;
     }
 
-    public String getPhoneNumber() {
+    public RequestBody getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
+    public void setPhoneNumber(RequestBody phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getBackgroundCheck() {
+    public RequestBody getBackgroundCheck() {
         return backgroundCheck;
     }
 
-    public void setBackgroundCheck(String backgroundCheck) {
+    public void setBackgroundCheck(RequestBody backgroundCheck) {
         this.backgroundCheck = backgroundCheck;
     }
 
-    public String getDateOfBirth() {
+    public RequestBody getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(String dateOfBirth) {
+    public void setDateOfBirth(RequestBody dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
-    public File getProfileImage() {
+    public MultipartBody.Part getProfileImage() {
         return profileImage;
     }
 
-    public void setProfileImage(File profileImage) {
+    public void setProfileImage(MultipartBody.Part profileImage) {
         this.profileImage = profileImage;
     }
 
@@ -115,19 +118,19 @@ public class SignUpRequestModel {
 //        this.profileImage = profileImage;
 //    }
 
-    public String getDeviceType() {
+    public RequestBody getDeviceType() {
         return deviceType;
     }
 
-    public void setDeviceType(String deviceType) {
+    public void setDeviceType(RequestBody deviceType) {
         this.deviceType = deviceType;
     }
 
-    public String getDeviceToken() {
+    public RequestBody getDeviceToken() {
         return deviceToken;
     }
 
-    public void setDeviceToken(String deviceToken) {
+    public void setDeviceToken(RequestBody deviceToken) {
         this.deviceToken = deviceToken;
     }
 }

@@ -12,13 +12,11 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcel;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +41,9 @@ import java.util.Calendar;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -63,7 +64,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
     private Button mBtnAccept;
     private Calendar mCalendar;
     private String mCheckBackground;
-    private File mProfileImage;
+    private MultipartBody.Part mProfileImage;
 //    private String mProfileImage;
     private static final int REQUEST_CAMERA = 0;
     private static final int SELECT_FILE = 1;
@@ -124,6 +125,8 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         mBtnAccept = (Button) findViewById(R.id.btnAccept);
         mCalendar = Calendar.getInstance();
         mCheckBackground = "";
+        mProfileImage = null;
+
     }
 
     public void setListener() {
@@ -322,12 +325,12 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
-        File destination = new File(Environment.getExternalStorageDirectory(),
+        File file = new File(Environment.getExternalStorageDirectory(),
                 System.currentTimeMillis() + ".jpg");
         FileOutputStream fo;
         try {
-            destination.createNewFile();
-            fo = new FileOutputStream(destination);
+            file.createNewFile();
+            fo = new FileOutputStream(file);
             fo.write(bytes.toByteArray());
             fo.close();
         } catch (FileNotFoundException e) {
@@ -336,9 +339,12 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             e.printStackTrace();
         }
         mImgViewProfile.setImageBitmap(thumbnail);
-        mProfileImage = destination;
-//        byte[] imageBytes = bytes.toByteArray();
-//        mProfileImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        RequestBody requestFile =
+                RequestBody.create(
+                        MediaType.parse(getContentResolver().getType(Uri.parse(file.getAbsolutePath()))),
+                        file
+                );
+        mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
     }
 
     @SuppressWarnings("deprecation")
@@ -354,7 +360,13 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             }
         }
         mImgViewProfile.setImageBitmap(bm);
-        mProfileImage = new File(Environment.getExternalStorageDirectory(), selectedImageURI.getPath());
+        File file = new File(Environment.getExternalStorageDirectory(), selectedImageURI.getPath());
+        RequestBody requestFile =
+                RequestBody.create(
+                        MediaType.parse(getContentResolver().getType(selectedImageURI)),
+                        file
+                );
+        mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
     }
 
     @Override
@@ -375,17 +387,58 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
     public void checkSignUp() {
         SignUpRequestModel rqt = new SignUpRequestModel();
-        rqt.setFirstName(mEdtFirstName.getText().toString().trim());
-        rqt.setLastName(mEdtLastName.getText().toString().trim());
-        rqt.setPhoneNumber(mEdtPhoneNumber.getText().toString().trim());
-        rqt.setEmailId(mEdtEmail.getText().toString().trim());
-        rqt.setDateOfBirth(mEdtBirthday.getText().toString().trim());
-        rqt.setSsn(mEdtSSN.getText().toString().trim());
-        rqt.setPassword(mEdtPassword.getText().toString().trim());
-        rqt.setBackgroundCheck(mCheckBackground);
+        RequestBody setFirstName =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtFirstName.getText().toString().trim());
+
+        rqt.setFirstName(setFirstName);
+
+        RequestBody setLastName =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtLastName.getText().toString().trim());
+
+        rqt.setLastName(setLastName);
+
+        RequestBody setPhoneNumber =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtPhoneNumber.getText().toString().trim());
+        rqt.setPhoneNumber(setPhoneNumber);
+
+        RequestBody setEmailId =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtEmail.getText().toString().trim());
+        rqt.setEmailId(setEmailId);
+
+        RequestBody setDateOfBirth =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtBirthday.getText().toString().trim());
+        rqt.setDateOfBirth(setDateOfBirth);
+
+        RequestBody setSsn =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtSSN.getText().toString().trim());
+        rqt.setSsn(setSsn);
+
+        RequestBody setPassword =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mEdtPassword.getText().toString().trim());
+        rqt.setPassword(setPassword);
+
+        RequestBody setBackgroundCheck =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, mCheckBackground);
+        rqt.setBackgroundCheck(setBackgroundCheck);
         rqt.setProfileImage(mProfileImage);
-        rqt.setDeviceToken("1");
-        rqt.setDeviceType("ANDROID");
+
+        RequestBody setDeviceToken =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, "1");
+        rqt.setDeviceToken(setDeviceToken);
+
+        RequestBody setDeviceType =
+                RequestBody.create(
+                        okhttp3.MultipartBody.FORM, "ANDROID");
+        rqt.setDeviceType(setDeviceType);
         SignUpApiHandler.signUpAccount(this, rqt, new SmartCallBack<SignUpResponseModel>() {
             @Override
             public Context getCurrentContext() {
@@ -401,7 +454,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
 
             @Override
             public void onError() {
-//                Toast.makeText(SignUpActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                //Show error
             }
         });
     }
