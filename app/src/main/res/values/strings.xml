@@ -25,8 +25,8 @@
     <string name="error400">Bad Request</string>
     <string name="error401">Unauthorized</string>
     <string name="error404">Data Not Found</string>
+    <string name="error409">Conflict: Infomation has been used !</string>
     <string name="error415">Unsupported media type</string>
     <string name="error500">Internal Server Error</string>
     <string name="no_internet">Please check your internet connection or try again later!</string>
-    <string name="error409">Conflict: Infomation has been used !</string>
 </resources>

@@ -37,6 +37,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.util.Calendar;
 import java.util.List;
 
@@ -338,8 +339,8 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
         mImgViewProfile.setImageBitmap(thumbnail);
+    }
 //        RequestBody requestFile =
 //                RequestBody.create(
 //                        MediaType.parse(getContentResolver().getType(data.getData())),
@@ -361,16 +362,14 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             }
         }
         mImgViewProfile.setImageBitmap(bm);
-//        File file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
-//        file.createNewFile();
-//        RequestBody requestFile =
-//                RequestBody.create(
-//                        MediaType.parse(getContentResolver().getType(data.getData())),
-//                        file
-//                );
-//        mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
+        File file = new File(data.getData().toString());
+        RequestBody requestFile =
+                RequestBody.create(
+                        MediaType.parse(getContentResolver().getType(data.getData())),
+                        file
+                );
+        mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
         Toast.makeText(this, data.getData().toString(), Toast.LENGTH_LONG).show();
-
     }
 
     @Override
