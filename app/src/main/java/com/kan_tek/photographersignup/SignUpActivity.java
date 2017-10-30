@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -328,29 +329,27 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
-        File file = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
+        File destination = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
         FileOutputStream fo;
         try {
-            file.createNewFile();
-            fo = new FileOutputStream(file);
+            destination.createNewFile();
+            fo = new FileOutputStream(destination);
             fo.write(bytes.toByteArray());
             fo.close();
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-            mImgViewProfile.setImageBitmap(thumbnail);
         }
-        String pathImg = RealPathUtils.getPath(SignUpActivity.this, data.getData());
-        File file1 = new File(pathImg);
-        RequestBody requestFile =
-                RequestBody.create(
-                        MediaType.parse(getContentResolver().getType(data.getData())),
-                        file1
-                );
-        mProfileImage = MultipartBody.Part.createFormData("profileImage", file1.getName(), requestFile);
-//        Toast.makeText(this, pathImg, Toast.LENGTH_LONG).show();
+        mImgViewProfile.setImageBitmap(thumbnail);
+//        String pathImg = RealPathUtils.getPath(SignUpActivity.this, data.getData());
+//        File file1 = new File(pathImg);
+//        RequestBody requestFile =
+//                RequestBody.create(
+//                        MediaType.parse(getContentResolver().getType(data.getData())),
+//                        file1
+//                );
+//        mProfileImage = MultipartBody.Part.createFormData("profileImage", file1.getName(), requestFile);
     }
 
     @SuppressWarnings("deprecation")
@@ -364,14 +363,14 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
             }
         }
         mImgViewProfile.setImageBitmap(bm);
-        File file = new File("");
+        String imgPath = RealPathUtils.getPath(SignUpActivity.this, data.getData());
+        File file = new File(imgPath);
         RequestBody requestFile =
                 RequestBody.create(
                         MediaType.parse(getContentResolver().getType(data.getData())),
                         file
                 );
         mProfileImage = MultipartBody.Part.createFormData("profileImage", file.getName(), requestFile);
-        Toast.makeText(this, data.getData().toString(), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -410,6 +409,7 @@ public class SignUpActivity extends AppCompatActivity implements EasyPermissions
                 mBtnAccept.setEnabled(true);
                 if (response.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                     Toast.makeText(SignUpActivity.this, response.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.d("Link img upload: ", response.getData().getProfilePicURL().getThumb());
                 }
             }
 
